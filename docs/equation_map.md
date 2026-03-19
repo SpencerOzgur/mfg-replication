@@ -51,3 +51,19 @@ Midpoint after price impact
 
 **Function**  
 `update_price(current_price, mean_flow, latent_signal, noise, params)`
+
+## 4. Inventory Dynamics
+
+**Equation**
+
+$`dQ_t^i = \nu_t^i dt`$
+
+
+**Interpretation**  
+Inventory changes according to the agent’s trading rate.
+
+**Code location**  
+`src/mfg_replication/simulation.py`
+
+**Function**  
+`update_inventory(current_inventory, trade_rate, dt)`
