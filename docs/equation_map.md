@@ -41,7 +41,7 @@ Discrete-time Euler approximation used in simulation.
 
 
 ## 3. Impacted Midprice
-$`dS_t^\nu = (A_t \bar{\nu}_t)dt + \sigma dW_t`$
+$`dS_t^\nu = (A_t \bar + {\nu}_t)dt + \sigma dW_t`$
 
 **Interpretation**
 Midpoint after price impact
