@@ -16,4 +16,3 @@ Model Overview:
 Repo Structure:
 - src- reproducible source code
 - docs- mathematical documentation of paper/model
-- 
