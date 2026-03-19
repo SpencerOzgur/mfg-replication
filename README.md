@@ -1,4 +1,4 @@
-#Objective
+# Objective
 
 The goal of this project is to replicate the simulated results of
 “Algorithmic Trading in Competitive Markets with Mean Field Games”
