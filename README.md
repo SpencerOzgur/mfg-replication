@@ -6,6 +6,7 @@ by Philippe Casgrain and Sebastian Jaimungal, and to analyze the behavior of het
 
 Following replication, the project explores extensions such as model misspecification, finite-population effects, and sensitivity to market impact.
 
+
 # Replication Targets:
 ## Inventory Dynamics
  - Heterogeneous agents with different urgancy levels
@@ -16,6 +17,7 @@ Following replication, the project explores extensions such as model misspecific
 ## Posterier Filtering of Latent State
   - Estimation of hidden market regimes
   - Differences in beliefs accross agent subpopulations
+
 
 # Model Overview:
 ## Latent Market
@@ -30,6 +32,7 @@ Following replication, the project explores extensions such as model misspecific
   - Utility function balancing profits, risk, liquiation costs
 ## Nash Equilibrium
   - Nash Equilibrium is approximated through MFG Framework
+
 
 # Repo Structure:
 - src- Core Simulation
