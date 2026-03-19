@@ -34,7 +34,20 @@ Price prior to adjuction for impact
 `src/mfg_replication/simulation.py`
 
 **Function**  
-`simulate_fundamental_price(latent_path, params)
+`simulate_fundamental_price(latent_path, params)`
 
 **Notes**  
 Discrete-time Euler approximation used in simulation.
+
+
+## 3. Impacted Midprice
+$`dS_t^\nu = (A_t \bar{\nu}_t)dt + \sigma dW_t`$
+
+**Interpretation**
+Midpoint after price impact
+
+**Code location**  
+`src/mfg_replication/simulation.py`
+
+**Function**  
+`update_price(current_price, mean_flow, latent_signal, noise, params)`
