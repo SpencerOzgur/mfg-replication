@@ -1,4 +1,4 @@
-#Symbol Table
+# Symbol Table
 
 $`S_t`$        : Impacted Midprice
 
