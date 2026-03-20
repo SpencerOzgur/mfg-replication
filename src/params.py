@@ -1,10 +1,19 @@
-import numpy as np
-from dataclasses import dataclass
+from latent import LatentParams
+from simulate import SimulationParams
 
-@dataclass
-class SimulationParams:
-    T: float = 1.0
-    dt: float = 0.0001
-    NSTEPS = T / dt
+latent_params = LatentParams(
+    T=1.0,
+    N=1000,
+    lambda01=0.5,
+    lambda10=0.5,
+    theta0=0
+)
 
-    time_grid = np.linspace(0, T, NSTEPS)
+simulation_params = SimulationParams(
+    T=1.0,
+    N=1000,
+    sigma=1.0,
+    A1=1.0,
+    A0=-1.0,
+    lambda_=0.5,
+)
