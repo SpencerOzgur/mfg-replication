@@ -1,5 +1,6 @@
 import simulate
 import latent
+import filtering
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -154,4 +155,23 @@ def plot_unimpacted_and_impacted(
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
+    plt.show()
+
+
+def plot_filter_results(F_t, latent_path, latent_params, sim_params):
+    posterior = filtering.filter_prob_state_1(F_t, latent_params, sim_params)
+
+    t = np.linspace(0, sim_params.T, sim_params.N + 1)
+
+    plt.figure(figsize=(10,5))
+
+    # posterior
+    plt.plot(t, posterior, label="P(Theta=1 | data)", color="blue")
+
+    # latent (step plot)
+    plt.step(t, latent_path, where='post', label="True State", color="red", alpha=0.5)
+
+    plt.ylim(-0.1, 1.1)
+    plt.legend()
+    plt.title("Filtering vs True Latent State")
     plt.show()
