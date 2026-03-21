@@ -23,6 +23,33 @@ def gaussian_likelihood(y: float,
     exp = np.exp(-0.5 * ((y - mu) ** 2) / var)
     return coeff * exp
 
+def validate_prior(prior: np.ndarray) -> np.ndarray:
+    prior = np.asarray(prior, dtype=np.float64)
+
+    if prior.shape != (2,):
+        raise ValueError("prior must be shape (2,)")
+
+    if np.any(prior < 0):
+        raise ValueError("prior entries must be nonnegative")
+
+    if not np.isclose(np.sum(prior), 1.0):
+        raise ValueError("prior must sum to 1")
+
+    return prior
+
+
+def initial_posterior(latent_params: latent.LatentParams,
+                      prior: np.ndarray | None = None) -> np.ndarray:
+    if prior is not None:
+        return validate_prior(prior)
+
+    if latent_params.theta0 == 0:
+        return np.array([1.0, 0.0], dtype=np.float64)
+    elif latent_params.theta0 == 1:
+        return np.array([0.0, 1.0], dtype=np.float64)
+    else:
+        raise ValueError("theta0 must be 0 or 1")
+
 
 def filter_step(posterior_prev: np.ndarray,
                 y: float,
@@ -47,7 +74,8 @@ def filter_step(posterior_prev: np.ndarray,
 
 def filter_fundamental_path(F_t: np.ndarray,
                             latent_params: latent.LatentParams,
-                            sim_params: simulate.SimulationParams) -> np.ndarray:
+                            sim_params: simulate.SimulationParams,
+                            prior: np.ndarray | None = None) -> np.ndarray:
     """
     :param F_t: Unimpacted price path
     :param latent_params: latent parameters
@@ -62,11 +90,7 @@ def filter_fundamental_path(F_t: np.ndarray,
     trans_mat = latent.build_transition_matrix(dt, latent_params)
     dFt = np.diff(F_t)
     posterior = np.zeros((sim_params.N + 1, 2))
-
-    if not latent_params.theta0:
-        posterior[0] = [1.0, 0.0]
-    else:
-        posterior[0] = [0.0, 1.0]
+    posterior[0] = initial_posterior(latent_params, prior)
 
     for i in range(sim_params.N):
         posterior[i + 1] = filter_step(posterior[i], dFt[i], trans_mat, sim_params)
@@ -76,7 +100,8 @@ def filter_fundamental_path(F_t: np.ndarray,
 def filter_impacted_path(S_t: np.ndarray,
                          impact: np.ndarray,
                          latent_params: latent.LatentParams,
-                         sim_params: simulate.SimulationParams) -> np.ndarray:
+                         sim_params: simulate.SimulationParams,
+                         prior: np.ndarray | None = None) -> np.ndarray:
     S_t = np.asarray(S_t, dtype=np.float64)
     if len(S_t) != sim_params.N + 1:
         raise ValueError('F_t must be of length N + 1')
@@ -87,11 +112,8 @@ def filter_impacted_path(S_t: np.ndarray,
     trans_mat = latent.build_transition_matrix(dt, latent_params)
     dSt = np.diff(S_t)
     posterior = np.zeros((sim_params.N + 1, 2))
+    posterior[0] = initial_posterior(latent_params, prior)
 
-    if not latent_params.theta0:
-        posterior[0] = [1.0, 0.0]
-    else:
-        posterior[0] = [0.0, 1.0]
     for i in range(sim_params.N):
         posterior[i + 1] = filter_step(posterior[i], dSt[i], trans_mat, sim_params, impact=impact[i])
 
@@ -99,20 +121,22 @@ def filter_impacted_path(S_t: np.ndarray,
 
 def filter_fundamental_prob_state_1(F_t: np.ndarray,
                         latent_params: latent.LatentParams,
-                        sim_params: simulate.SimulationParams) -> np.ndarray:
+                        sim_params: simulate.SimulationParams,
+                        prior: np.ndarray | None = None) -> np.ndarray:
     """
     :param F_t: Unimpacted price path
     :param latent_params: latent parameters
     :param sim_params: simulation parameters
     :return: state 1 posteriors
     """
-    filter_path = filter_fundamental_path(F_t, latent_params, sim_params)
+    filter_path = filter_fundamental_path(F_t, latent_params, sim_params, prior=prior)
     return filter_path[:, 1]
 
 def filter_impacted_prob_state_1(S_t: np.ndarray,
                         latent_params: latent.LatentParams,
                         sim_params: simulate.SimulationParams,
-                        impact: np.ndarray) -> np.ndarray:
+                        impact: np.ndarray,
+                        prior: np.ndarray | None = None) -> np.ndarray:
     """
     :param S_t: Impacted price path
     :param latent_params: latent parameters
@@ -120,5 +144,5 @@ def filter_impacted_prob_state_1(S_t: np.ndarray,
     :param impact: impact list
     :return: state 1 posteriors
     """
-    filter_path = filter_impacted_path(S_t, impact, latent_params, sim_params)
+    filter_path = filter_impacted_path(S_t, impact, latent_params, sim_params, prior=prior)
     return filter_path[:, 1]

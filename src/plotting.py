@@ -157,74 +157,128 @@ def plot_unimpacted_and_impacted(
     plt.tight_layout()
     plt.show()
 
-
-def plot_fundamental_filter_results(F_t, latent_path, latent_params, sim_params):
-    posterior = filtering.filter_fundamental_prob_state_1(F_t, latent_params, sim_params)
-
+def plot_fundamental_posteriors(pi_k, latent_path, sim_params, subpops):
     t = np.linspace(0, sim_params.T, sim_params.N + 1)
-
-    plt.figure(figsize=(10,5))
-
-    # posterior
-    plt.plot(t, posterior, label="P(Theta=1 | data)", color="blue")
-
-    # latent (step plot)
-    plt.step(t, latent_path, where='post', label="True State", color="red", alpha=0.5)
-
+    plt.figure(figsize=(10, 5))
+    for i, sp in enumerate(subpops):
+        plt.plot(t, pi_k[i], label=f"{sp.name} posterior")
+    plt.step(t, latent_path, where='post', label="True State", color="black", alpha=0.5)
     plt.ylim(-0.1, 1.1)
     plt.legend()
-    plt.title("Filtering vs True Latent State")
+    plt.title("Fundamental Filtering vs True Latent State")
+    plt.xlabel("Time")
+    plt.ylabel("Posterior Probability")
     plt.show()
 
-def plot_impacted_filter_results(S_t, impact, latent_path, latent_params, sim_params):
-    posterior = filtering.filter_impacted_prob_state_1(
-        S_t, latent_params, sim_params, impact
-    )
 
+def plot_impacted_posteriors(pi_imp_k, latent_path, sim_params, subpops):
     t = np.linspace(0, sim_params.T, sim_params.N + 1)
-
-    plt.figure(figsize=(10,5))
-
-    # posterior
-    plt.plot(t, posterior, label="P(Theta=1 | data, impacted)", color="green")
-
-    # latent (step plot)
-    plt.step(t, latent_path, where='post',
-             label="True State", color="red", alpha=0.5)
-
+    plt.figure(figsize=(10, 5))
+    for i, sp in enumerate(subpops):
+        plt.plot(t, pi_imp_k[i], label=f"{sp.name} impacted posterior")
+    plt.step(t, latent_path, where='post', label="True State", color="black", alpha=0.5)
     plt.ylim(-0.1, 1.1)
     plt.legend()
     plt.title("Impacted Filtering vs True Latent State")
+    plt.xlabel("Time")
+    plt.ylabel("Posterior Probability")
     plt.show()
 
-def plot_fundamental_vs_impacted(F_t, S_t, impact,
-                                latent_path,
-                                latent_params,
-                                sim_params):
 
-    posterior_F = filtering.filter_fundamental_prob_state_1(
-        F_t, latent_params, sim_params
-    )
-
-    posterior_S = filtering.filter_impacted_prob_state_1(
-        S_t, latent_params, sim_params, impact
-    )
-
+def plot_fundamental_vs_impacted_posteriors(pi_fund_k, pi_imp_k, latent_path, sim_params, subpops):
     t = np.linspace(0, sim_params.T, sim_params.N + 1)
-
-    plt.figure(figsize=(12,6))
-
-    # fundamental
-    plt.plot(t, posterior_F, label="Fundamental Filter", color="blue")
-
-    # impacted
-    plt.plot(t, posterior_S, label="Impacted Filter", color="green", linestyle="--")
-
-    # latent
-    plt.step(t, latent_path, where='post',
-             label="True State", color="red", alpha=0.5)
-
+    plt.figure(figsize=(12, 6))
+    for i, sp in enumerate(subpops):
+        plt.plot(t, pi_fund_k[i], label=f"{sp.name} fundamental")
+        plt.plot(t, pi_imp_k[i], linestyle='--', label=f"{sp.name} impacted")
+    plt.step(t, latent_path, where='post', label="True State", color="black", alpha=0.4)
     plt.ylim(-0.1, 1.1)
     plt.legend()
-    plt.title("Fundamental vs Impacted Filtering")
+    plt.title("Fundamental vs Impacted Filtering by Subpopulation")
+    plt.xlabel("Time")
+    plt.ylabel("Posterior Probability")
+    plt.show()
+
+def plot_estimated_drifts(A_hat_k, latent_path, sim_params, subpops, A0, A1):
+    t = np.linspace(0, sim_params.T, sim_params.N + 1)
+    true_drift = np.where(latent_path == 0, A0, A1)
+
+    plt.figure(figsize=(12, 6))
+
+    plt.step(t, true_drift, where='post', label='True Drift', color='black', alpha=0.7)
+
+    for i, sp in enumerate(subpops):
+        plt.plot(t, A_hat_k[i], label=f'{sp.name} estimated drift')
+
+    plt.legend()
+    plt.title("Estimated Drift by Subpopulation")
+    plt.xlabel("Time")
+    plt.ylabel("Drift")
+    plt.show()
+
+def plot_controls_subpops(nu_hat_k, nu_bar, sim_params, subpops):
+    """
+    Plot trading rates for each subpopulation and the aggregate rate.
+
+    :param nu_hat_k: shape (K, N) array of controls
+    :param nu_bar: shape (N,) aggregate control
+    :param sim_params: simulation parameters
+    :param subpops: list of subpopulation parameter objects
+    """
+    t = np.linspace(0, sim_params.T, sim_params.N)
+
+    plt.figure(figsize=(12, 6))
+
+    for i, sp in enumerate(subpops):
+        plt.plot(t, nu_hat_k[i], label=f'{sp.name} control')
+
+    plt.plot(t, nu_bar, label='Aggregate control', color='black', linestyle='--', linewidth=2)
+
+    plt.legend()
+    plt.title("Trading Rates by Subpopulation")
+    plt.xlabel("Time")
+    plt.ylabel("Trading Rate")
+    plt.show()
+
+def plot_inventories_subpops(nu_hat_k, sim_params, subpops, q_bar=False):
+    dt = sim_params.T / sim_params.N
+    t = np.linspace(0, sim_params.T, sim_params.N + 1)
+
+    plt.figure(figsize=(12, 6))
+
+    q_paths = []
+
+    for i, sp in enumerate(subpops):
+        q = np.empty(sim_params.N + 1)
+        q[0] = sp.Q0
+        q[1:] = sp.Q0 - np.cumsum(nu_hat_k[i]) * dt
+        q_paths.append(q)
+
+        plt.plot(t, q, label=f'{sp.name} inventory')
+
+    if q_bar:
+        q_paths = np.array(q_paths)
+        q_agg = np.zeros(sim_params.N + 1)
+        for i, sp in enumerate(subpops):
+            q_agg += sp.weight * q_paths[i]
+        plt.plot(t, q_agg, label='Aggregate inventory', color='black', linestyle='--', linewidth=2)
+
+    plt.legend()
+    plt.title("Inventory Paths by Subpopulation")
+    plt.xlabel("Time")
+    plt.ylabel("Inventory")
+    plt.show()
+
+def plot_price_distortion(F_t, S_t, sim_params):
+    t = np.linspace(0, sim_params.T, sim_params.N + 1)
+    distortion = S_t - F_t
+
+    plt.figure(figsize=(12, 5))
+    plt.plot(t, distortion, label='S_t - F_t')
+    plt.axhline(0.0, color='black', linestyle='--', alpha=0.6)
+
+    plt.legend()
+    plt.title("Price Distortion from Market Impact")
+    plt.xlabel("Time")
+    plt.ylabel("Distortion")
     plt.show()
