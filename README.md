@@ -27,21 +27,21 @@ After replication, the project explores:
 
 ### Price Dynamics
 - Fundamental price:
-  \[
+  $`
   dF_t = A_t dt + \sigma dW_t
-  \]
+  `$
 
 - Impacted price:
-  \[
+  $`
   S_t = F_t + \lambda \int_0^t \bar{\nu}_s ds
-  \]
+  `$
 
 ### Agent Behavior
-- Continuous trading rate \( \nu_t \)
+- Continuous trading rate $`\nu_t`$
 - Depends on:
   - filtered drift estimate
   - inventory level
-  - risk aversion (\(\kappa\))
+  - risk aversion $`\kappa`$
 
 ### Objective
 Agents minimize:
@@ -54,7 +54,7 @@ Agents minimize:
 
 ---
 
-## 🔁 Replication Targets
+## Replication Targets
 
 ### 1. Inventory Dynamics
 - Heterogeneous urgency levels
