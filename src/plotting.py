@@ -4,6 +4,17 @@ import filtering
 import numpy as np
 import matplotlib.pyplot as plt
 
+from pathlib import Path
+
+OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output" / "figure"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+def _save_fig(name: str):
+    import time
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+    filepath = OUTPUT_DIR / f"{name}_{timestamp}.png"
+    plt.savefig(filepath, dpi=300, bbox_inches="tight")
+    plt.close()
 
 def plot_unimpacted(
     F_t: np.ndarray,
@@ -55,7 +66,8 @@ def plot_unimpacted(
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.show()
+    plt.tight_layout()
+    _save_fig("Fundamental_Price_Path")
 
 
 def plot_impacted(
@@ -103,7 +115,7 @@ def plot_impacted(
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.show()
+    _save_fig("Impacted_Price_Path")
 
 def plot_unimpacted_and_impacted(
     F_t: np.ndarray,
@@ -155,7 +167,9 @@ def plot_unimpacted_and_impacted(
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.show()
+    _save_fig("Fundamental_vs_Impacted_Price")
+
+
 
 def plot_fundamental_posteriors(pi_k, latent_path, sim_params, subpops):
     t = np.linspace(0, sim_params.T, sim_params.N + 1)
@@ -168,7 +182,8 @@ def plot_fundamental_posteriors(pi_k, latent_path, sim_params, subpops):
     plt.title("Fundamental Filtering vs True Latent State")
     plt.xlabel("Time")
     plt.ylabel("Posterior Probability")
-    plt.show()
+    plt.tight_layout()
+    _save_fig("Fundamental_Posteriors")
 
 
 def plot_impacted_posteriors(pi_imp_k, latent_path, sim_params, subpops):
@@ -182,7 +197,8 @@ def plot_impacted_posteriors(pi_imp_k, latent_path, sim_params, subpops):
     plt.title("Impacted Filtering vs True Latent State")
     plt.xlabel("Time")
     plt.ylabel("Posterior Probability")
-    plt.show()
+    plt.tight_layout()
+    _save_fig("Impacted_Posteriors")
 
 
 def plot_fundamental_vs_impacted_posteriors(pi_fund_k, pi_imp_k, latent_path, sim_params, subpops):
@@ -197,7 +213,8 @@ def plot_fundamental_vs_impacted_posteriors(pi_fund_k, pi_imp_k, latent_path, si
     plt.title("Fundamental vs Impacted Filtering by Subpopulation")
     plt.xlabel("Time")
     plt.ylabel("Posterior Probability")
-    plt.show()
+    plt.tight_layout()
+    _save_fig("Fundamental_vs_Impacted_Posteriors")
 
 def plot_estimated_drifts(A_hat_k, latent_path, sim_params, subpops, A0, A1):
     t = np.linspace(0, sim_params.T, sim_params.N + 1)
@@ -214,7 +231,8 @@ def plot_estimated_drifts(A_hat_k, latent_path, sim_params, subpops, A0, A1):
     plt.title("Estimated Drift by Subpopulation")
     plt.xlabel("Time")
     plt.ylabel("Drift")
-    plt.show()
+    plt.tight_layout()
+    _save_fig("Estimated_Drifts")
 
 def plot_controls_subpops(nu_hat_k, nu_bar, sim_params, subpops):
     """
@@ -238,7 +256,8 @@ def plot_controls_subpops(nu_hat_k, nu_bar, sim_params, subpops):
     plt.title("Trading Rates by Subpopulation")
     plt.xlabel("Time")
     plt.ylabel("Trading Rate")
-    plt.show()
+    plt.tight_layout()
+    _save_fig("SubPop_Controls")
 
 def plot_inventories_subpops(nu_hat_k, sim_params, subpops, q_bar=False):
     dt = sim_params.T / sim_params.N
@@ -267,7 +286,8 @@ def plot_inventories_subpops(nu_hat_k, sim_params, subpops, q_bar=False):
     plt.title("Inventory Paths by Subpopulation")
     plt.xlabel("Time")
     plt.ylabel("Inventory")
-    plt.show()
+    plt.tight_layout()
+    _save_fig("Inventory_Path_by_SubPop")
 
 def plot_price_distortion(F_t, S_t, sim_params):
     t = np.linspace(0, sim_params.T, sim_params.N + 1)
@@ -281,4 +301,5 @@ def plot_price_distortion(F_t, S_t, sim_params):
     plt.title("Price Distortion from Market Impact")
     plt.xlabel("Time")
     plt.ylabel("Distortion")
-    plt.show()
+    plt.tight_layout()
+    _save_fig("Price_Distortion")
