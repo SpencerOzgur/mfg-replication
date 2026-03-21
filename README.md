@@ -74,8 +74,8 @@ Agents minimize:
 ## Setup
 
 ```bash
-git clone
-cd
+git clone https://github.com/SpencerOzgur/Mean-Field-Game-Simulation-for-Optimal-Execution.git
+cd Mean-Field-Game-Simulation-for-Optimal-Execution
 
 python -m venv venv
 source venv/bin/activate
