@@ -102,6 +102,14 @@ def filter_impacted_path(S_t: np.ndarray,
                          latent_params: latent.LatentParams,
                          sim_params: simulate.SimulationParams,
                          prior: np.ndarray | None = None) -> np.ndarray:
+    """
+    :param S_t: Impacted price path
+    :param impact: Impact
+    :param latent_params: Latent parameters
+    :param sim_params: Simulation parameters
+    :param prior: Initial Priors for SupPop
+    :return: Likelihood of state
+    """
     S_t = np.asarray(S_t, dtype=np.float64)
     if len(S_t) != sim_params.N + 1:
         raise ValueError('F_t must be of length N + 1')

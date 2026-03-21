@@ -1,6 +1,4 @@
 import simulate
-import latent
-import filtering
 import numpy as np
 import matplotlib.pyplot as plt
 import time
@@ -22,11 +20,6 @@ def plot_unimpacted(
     show_latent: bool = True) -> None:
     """
     Plot the unimpacted price path, with optional latent-drift overlay.
-
-    :param F_t: Unimpacted price path of length N + 1
-    :param latent_path: Latent state path of length N + 1
-    :param sim_params: Simulation parameters
-    :param show_latent: Whether to overlay the latent drift
     """
     F_t = np.asarray(F_t, dtype=np.float64)
     latent_path = np.asarray(latent_path)
@@ -171,6 +164,9 @@ def plot_unimpacted_and_impacted(
 
 
 def plot_fundamental_posteriors(pi_k, latent_path, sim_params, subpops):
+    """
+    Plot the posteriors of fundamental path.
+    """
     t = np.linspace(0, sim_params.T, sim_params.N + 1)
     plt.figure(figsize=(10, 5))
     for i, sp in enumerate(subpops):
@@ -186,6 +182,9 @@ def plot_fundamental_posteriors(pi_k, latent_path, sim_params, subpops):
 
 
 def plot_impacted_posteriors(pi_imp_k, latent_path, sim_params, subpops):
+    """
+     Plot the posteriors of impacted path.
+    """
     t = np.linspace(0, sim_params.T, sim_params.N + 1)
     plt.figure(figsize=(10, 5))
     for i, sp in enumerate(subpops):
@@ -201,6 +200,9 @@ def plot_impacted_posteriors(pi_imp_k, latent_path, sim_params, subpops):
 
 
 def plot_fundamental_vs_impacted_posteriors(pi_fund_k, pi_imp_k, latent_path, sim_params, subpops):
+    """
+    Plot fundamental vs impacted posteriors for subpopulations
+    """
     t = np.linspace(0, sim_params.T, sim_params.N + 1)
     plt.figure(figsize=(12, 6))
     for i, sp in enumerate(subpops):
@@ -216,6 +218,9 @@ def plot_fundamental_vs_impacted_posteriors(pi_fund_k, pi_imp_k, latent_path, si
     _save_fig("Fundamental_vs_Impacted_Posteriors")
 
 def plot_estimated_drifts(A_hat_k, latent_path, sim_params, subpops, A0, A1):
+    """
+    Plot estimated drift for each subpopulation
+    """
     t = np.linspace(0, sim_params.T, sim_params.N + 1)
     true_drift = np.where(latent_path == 0, A0, A1)
 
@@ -236,11 +241,6 @@ def plot_estimated_drifts(A_hat_k, latent_path, sim_params, subpops, A0, A1):
 def plot_controls_subpops(nu_hat_k, nu_bar, sim_params, subpops):
     """
     Plot trading rates for each subpopulation and the aggregate rate.
-
-    :param nu_hat_k: shape (K, N) array of controls
-    :param nu_bar: shape (N,) aggregate control
-    :param sim_params: simulation parameters
-    :param subpops: list of subpopulation parameter objects
     """
     t = np.linspace(0, sim_params.T, sim_params.N)
 
@@ -289,6 +289,9 @@ def plot_inventories_subpops(nu_hat_k, sim_params, subpops, q_bar=False):
     _save_fig("Inventory_Path_by_SubPop")
 
 def plot_price_distortion(F_t, S_t, sim_params):
+    """
+    Plot how much price is distorted by mean-field
+    """
     t = np.linspace(0, sim_params.T, sim_params.N + 1)
     distortion = S_t - F_t
 
