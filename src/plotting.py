@@ -305,3 +305,47 @@ def plot_price_distortion(F_t, S_t, sim_params):
     plt.ylabel("Distortion")
     plt.tight_layout()
     _save_fig("Price_Distortion")
+
+def plot_individual_vs_mean_inventory(
+    agent_inventories,
+    q_bar_mfg,
+    q_bar_emp,
+    sim_params,
+    subpops,
+):
+    t = np.linspace(0, sim_params.T, sim_params.N + 1)
+    colors = ["tab:blue", "tab:red", "tab:green", "tab:purple"]
+
+    plt.figure(figsize=(12, 7))
+
+    for k, sp in enumerate(subpops):
+        color = colors[k % len(colors)]
+
+        for q_i in agent_inventories[k]:
+            plt.plot(t, q_i, color=color, alpha=0.2, linewidth=1)
+
+        plt.plot(
+            t,
+            q_bar_mfg[k],
+            color=color,
+            linewidth=3,
+            label=f"{sp.name} mean field",
+        )
+
+        plt.plot(
+            t,
+            q_bar_emp[k],
+            color=color,
+            linestyle="--",
+            linewidth=2.5,
+            label=f"{sp.name} empirical mean",
+        )
+
+    plt.title("Individual vs Mean Field Inventory")
+    plt.xlabel("Time")
+    plt.ylabel("Inventory")
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.tight_layout()
+    _save_fig("Individual_Vs_Mean_Inventory")
