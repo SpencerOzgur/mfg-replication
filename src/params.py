@@ -13,24 +13,24 @@ class SubPopParams:
 
 latent_params = LatentParams(
     T=1.0,
-    N=200,
-    lambda01=0.5,
-    lambda10=0.5,
-    theta0=0
+    N=1000,
+    lambda01=3.0,
+    lambda10=2.0,
+    theta0=1
 )
 
 simulation_params = SimulationParams(
     T=1.0,
-    N=200,
-    sigma=0.5,
-    A1=2.0,
-    A0=-2.0,
-    lambda_=0.5,
+    N=1000,
+    sigma=0.25,
+    A1=1.0,
+    A0=-1.0,
+    lambda_=0.05,
     S0=100
 )
 
 control_params = ControlParams(
     T=1.0,
-    N=200,
+    N=1000,
     Q0=1.0
 )

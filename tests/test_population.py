@@ -17,14 +17,14 @@ def make_test_subpops():
             name="SubPop1",
             weight=0.5,
             prior=0.8,
-            Q0=100.0,
+            Q0=1.0,
             kappa=0.5,
         ),
         SubPopParams(
             name="SubPop2",
             weight=0.5,
             prior=0.2,
-            Q0=100.0,
+            Q0=1.0,
             kappa=2.0,
         ),
     ]
@@ -103,7 +103,7 @@ def test_population_empirical_mean_matches_manual_average():
         assert np.allclose(manual_mean, results["q_bar_emp"][k])
 
 
-def test_population_terminal_inventories_are_close_to_zero_if_model_forces_liquidation():
+def test_population_terminal_inventory_is_smaller_than_initial_inventory():
     subpops = make_test_subpops()
     K = len(subpops)
 
@@ -130,8 +130,15 @@ def test_population_terminal_inventories_are_close_to_zero_if_model_forces_liqui
         sim_params=simulation_params,
         n_agents=10,
         seed=42,
+        phi=0.02,
+        psi=5.0,
+        a=1.0,
+        q0_scales=[0.1, 0.1],
+        clip_q0=False,
     )
 
     for k in range(K):
-        terminal_vals = results["agent_inventories"][k][:, -1]
-        assert np.all(np.abs(terminal_vals) < 1e-6)
+        q_group = results["agent_inventories"][k]
+        initial_vals = np.abs(q_group[:, 0])
+        terminal_vals = np.abs(q_group[:, -1])
+        assert np.all(terminal_vals <= initial_vals)

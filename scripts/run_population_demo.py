@@ -1,16 +1,18 @@
 from pathlib import Path
 import sys
 import numpy as np
+import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-import plotting
 import population
+import plotting
 import pipelines
-from params import latent_params, simulation_params, control_params, SubPopParams
+from params import latent_params, simulation_params, control_params
+
 
 def main():
     np.random.seed(42)
@@ -31,9 +33,15 @@ def main():
         subpops=subpops,
         control_params=control_params,
         sim_params=simulation_params,
-        n_agents=20,
+        n_agents=30,
         seed=42,
-        psi=10.0,
+        phi=0.2,
+        psi=5.0,
+        a=1.0,
+        q0_scales=[2.0, 2.0],
+        clip_q0=False,
+        plot=False,
+        plot_controls=False,
     )
 
     plotting.plot_individual_vs_mean_inventory(
@@ -43,6 +51,9 @@ def main():
         sim_params=simulation_params,
         subpops=subpops,
     )
+
+    plt.show()
+
 
 if __name__ == "__main__":
     main()

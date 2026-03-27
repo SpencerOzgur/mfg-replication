@@ -1,65 +1,213 @@
 import numpy as np
-import control
+import equilibrium
+from control import EquilibriumControlParams
 from params import control_params, simulation_params
 
 
-def inventory_from_control(nu_hat: np.ndarray, Q0: float, T: float, N: int) -> np.ndarray:
-    dt = T / N
-    q = np.empty(N + 1)
-    q[0] = Q0
-    q[1:] = Q0 - np.cumsum(nu_hat) * dt
-    return q
+def test_equilibrium_control_fbsde_shape():
+    N = control_params.N
+    A_hat = np.zeros(N)
+    nu_bar = np.zeros(N)
 
+    params = EquilibriumControlParams(
+        T=control_params.T,
+        N=control_params.N,
+        Q0=control_params.Q0,
+        a=1.0,
+        phi=0.02,
+        psi=5.0,
+        lam=simulation_params.lambda_,
+    )
 
-def test_alpha_inventory_control_shape():
-    A_hat = np.zeros(control_params.N)
-
-    nu_hat = control.alpha_inventory_control(
+    nu_hat, q = equilibrium.equilibrium_control_fbsde(
         A_hat=A_hat,
-        params=control_params,
-        kappa=1.0,
+        nu_bar=nu_bar,
+        params=params,
     )
 
     assert isinstance(nu_hat, np.ndarray)
-    assert nu_hat.shape == (control_params.N,)
+    assert isinstance(q, np.ndarray)
+    assert nu_hat.shape == (N,)
+    assert q.shape == (N + 1,)
 
 
-def test_validate_controls_accepts_valid_shape():
-    nu_hat = np.zeros(control_params.N)
-    control.validate_controls(nu_hat, control_params)
+def test_equilibrium_control_fbsde_outputs_are_finite():
+    N = control_params.N
+    A_hat = np.zeros(N)
+    nu_bar = np.zeros(N)
+
+    params = EquilibriumControlParams(
+        T=control_params.T,
+        N=control_params.N,
+        Q0=control_params.Q0,
+        a=1.0,
+        phi=0.02,
+        psi=5.0,
+        lam=simulation_params.lambda_,
+    )
+
+    nu_hat, q = equilibrium.equilibrium_control_fbsde(
+        A_hat=A_hat,
+        nu_bar=nu_bar,
+        params=params,
+    )
+
+    assert np.all(np.isfinite(nu_hat))
+    assert np.all(np.isfinite(q))
 
 
-def test_validate_controls_rejects_wrong_length():
-    nu_hat = np.zeros(control_params.N - 1)
+def test_equilibrium_control_fbsde_inventory_recursion():
+    N = control_params.N
+    A_hat = np.zeros(N)
+    nu_bar = np.zeros(N)
+
+    params = EquilibriumControlParams(
+        T=control_params.T,
+        N=control_params.N,
+        Q0=control_params.Q0,
+        a=1.0,
+        phi=0.02,
+        psi=5.0,
+        lam=simulation_params.lambda_,
+    )
+
+    nu_hat, q = equilibrium.equilibrium_control_fbsde(
+        A_hat=A_hat,
+        nu_bar=nu_bar,
+        params=params,
+    )
+
+    dt = params.T / params.N
+    for i in range(params.N):
+        assert np.isclose(q[i + 1], q[i] - nu_hat[i] * dt)
+
+
+def test_equilibrium_control_fbsde_initial_inventory_matches_Q0():
+    N = control_params.N
+    A_hat = np.zeros(N)
+    nu_bar = np.zeros(N)
+
+    params = EquilibriumControlParams(
+        T=control_params.T,
+        N=control_params.N,
+        Q0=2.5,
+        a=1.0,
+        phi=0.02,
+        psi=5.0,
+        lam=simulation_params.lambda_,
+    )
+
+    _, q = equilibrium.equilibrium_control_fbsde(
+        A_hat=A_hat,
+        nu_bar=nu_bar,
+        params=params,
+    )
+
+    assert np.isclose(q[0], params.Q0)
+
+
+def test_equilibrium_control_fbsde_rejects_wrong_A_hat_length():
+    N = control_params.N
+    A_hat = np.zeros(N - 1)
+    nu_bar = np.zeros(N)
+
+    params = EquilibriumControlParams(
+        T=control_params.T,
+        N=control_params.N,
+        Q0=control_params.Q0,
+        a=1.0,
+        phi=0.02,
+        psi=5.0,
+        lam=simulation_params.lambda_,
+    )
 
     try:
-        control.validate_controls(nu_hat, control_params)
-        assert False, "Expected ValueError for wrong control length"
+        equilibrium.equilibrium_control_fbsde(
+            A_hat=A_hat,
+            nu_bar=nu_bar,
+            params=params,
+        )
+        assert False, "Expected ValueError for wrong A_hat length"
     except ValueError:
         assert True
 
 
-def test_inventory_recursion_from_control():
-    nu_hat = np.ones(control_params.N)
-    q = inventory_from_control(
-        nu_hat=nu_hat,
-        Q0=control_params.Q0,
+def test_equilibrium_control_fbsde_rejects_wrong_nu_bar_length():
+    N = control_params.N
+    A_hat = np.zeros(N)
+    nu_bar = np.zeros(N - 1)
+
+    params = EquilibriumControlParams(
         T=control_params.T,
         N=control_params.N,
+        Q0=control_params.Q0,
+        a=1.0,
+        phi=0.02,
+        psi=5.0,
+        lam=simulation_params.lambda_,
     )
 
-    dt = control_params.T / control_params.N
-    for n in range(control_params.N):
-        assert np.isclose(q[n + 1], q[n] - nu_hat[n] * dt)
+    try:
+        equilibrium.equilibrium_control_fbsde(
+            A_hat=A_hat,
+            nu_bar=nu_bar,
+            params=params,
+        )
+        assert False, "Expected ValueError for wrong nu_bar length"
+    except ValueError:
+        assert True
 
 
-def test_zero_signal_control_has_correct_shape_and_finite_values():
-    A_hat = np.zeros(control_params.N)
+def test_solve_mean_field_fixed_point_single_population_shapes():
+    N = control_params.N
+    A_hat = np.zeros(N)
 
-    nu_hat = control.alpha_inventory_control(
-        A_hat=A_hat,
-        params=control_params,
-        kappa=1.0,
+    params = EquilibriumControlParams(
+        T=control_params.T,
+        N=control_params.N,
+        Q0=control_params.Q0,
+        a=1.0,
+        phi=0.02,
+        psi=5.0,
+        lam=simulation_params.lambda_,
     )
 
-    assert np.all(np.isfinite(nu_hat))
+    nu_list, q_list, nu_bar = equilibrium.solve_mean_field_fixed_point(
+        A_hat_list=[A_hat],
+        weights=np.array([1.0]),
+        param_list=[params],
+    )
+
+    assert isinstance(nu_list, list)
+    assert isinstance(q_list, list)
+    assert len(nu_list) == 1
+    assert len(q_list) == 1
+    assert nu_list[0].shape == (N,)
+    assert q_list[0].shape == (N + 1,)
+    assert nu_bar.shape == (N,)
+    assert np.all(np.isfinite(nu_bar))
+
+
+def test_solve_mean_field_fixed_point_weight_sum_must_be_one():
+    N = control_params.N
+    A_hat = np.zeros(N)
+
+    params = EquilibriumControlParams(
+        T=control_params.T,
+        N=control_params.N,
+        Q0=control_params.Q0,
+        a=1.0,
+        phi=0.02,
+        psi=5.0,
+        lam=simulation_params.lambda_,
+    )
+
+    try:
+        equilibrium.solve_mean_field_fixed_point(
+            A_hat_list=[A_hat],
+            weights=np.array([0.8]),
+            param_list=[params],
+        )
+        assert False, "Expected ValueError when weights do not sum to one"
+    except ValueError:
+        assert True

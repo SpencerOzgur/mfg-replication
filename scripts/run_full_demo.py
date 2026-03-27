@@ -125,6 +125,7 @@ def main() -> None:
     A_hat_k = signal_results["A_hat_k"]
 
     # 2. Solve mean-field fixed point
+    # 2. Solve mean-field fixed point
     weights = np.array([sp.weight for sp in subpops], dtype=np.float64)
 
     param_list = [

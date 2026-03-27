@@ -258,28 +258,36 @@ def plot_controls_subpops(nu_hat_k, nu_bar, sim_params, subpops):
     plt.tight_layout()
     _save_fig("SubPop_Controls")
 
-def plot_inventories_subpops(nu_hat_k, sim_params, subpops, q_bar=False):
-    dt = sim_params.T / sim_params.N
+def plot_inventories_subpops(q_hat_k, sim_params, subpops, q_bar=False):
+    q_hat_k = np.asarray(q_hat_k, dtype=np.float64)
+
+    if q_hat_k.ndim != 2:
+        raise ValueError("q_hat_k must be a 2-D array")
+    if q_hat_k.shape[0] != len(subpops):
+        raise ValueError("q_hat_k must have one row per subpopulation")
+    if q_hat_k.shape[1] != sim_params.N + 1:
+        raise ValueError("q_hat_k must have shape (K, N+1)")
+
     t = np.linspace(0, sim_params.T, sim_params.N + 1)
 
     plt.figure(figsize=(12, 6))
 
-    q_paths = []
-
     for i, sp in enumerate(subpops):
-        q = np.empty(sim_params.N + 1)
-        q[0] = sp.Q0
-        q[1:] = sp.Q0 - np.cumsum(nu_hat_k[i]) * dt
-        q_paths.append(q)
-
-        plt.plot(t, q, label=f'{sp.name} inventory')
+        plt.plot(t, q_hat_k[i], label=f"{sp.name} inventory")
 
     if q_bar:
-        q_paths = np.array(q_paths)
-        q_agg = np.zeros(sim_params.N + 1)
+        q_agg = np.zeros(sim_params.N + 1, dtype=np.float64)
         for i, sp in enumerate(subpops):
-            q_agg += sp.weight * q_paths[i]
-        plt.plot(t, q_agg, label='Aggregate inventory', color='black', linestyle='--', linewidth=2)
+            q_agg += sp.weight * q_hat_k[i]
+
+        plt.plot(
+            t,
+            q_agg,
+            label="Aggregate inventory",
+            color="black",
+            linestyle="--",
+            linewidth=2,
+        )
 
     plt.legend()
     plt.title("Inventory Paths by Subpopulation")

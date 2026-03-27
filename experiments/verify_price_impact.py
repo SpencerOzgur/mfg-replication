@@ -10,16 +10,9 @@ if str(SRC) not in sys.path:
 import latent
 import simulate
 import filtering
-import control
+import equilibrium
+from control import EquilibriumControlParams
 from params import latent_params, simulation_params, control_params
-
-
-def inventory_from_control(nu_hat: np.ndarray, Q0: float, T: float, N: int) -> np.ndarray:
-    dt = T / N
-    q = np.empty(N + 1)
-    q[0] = Q0
-    q[1:] = Q0 - np.cumsum(nu_hat) * dt
-    return q
 
 
 def main():
@@ -41,53 +34,74 @@ def main():
     A_hat = pi * simulation_params.A1 + (1.0 - pi) * simulation_params.A0
 
     kappas = [0.25, 0.5, 1.0, 2.0, 5.0]
-    dt = control_params.T / control_params.N
 
-    avg_abs_rates = []
-    mid_inventories = []
+    phi_base = 0.02
+    psi = 5.0
+    a = 1.0
 
-    print("Sensitivity verification: kappa")
+    mean_abs_rates = []
+    midpoint_inventories = []
+    terminal_inventories = []
+
+    print("Sensitivity verification: kappa in FBSDE equilibrium control")
     print("-" * 60)
 
     for kappa in kappas:
-        nu_hat = control.alpha_inventory_control(
-            A_hat=A_hat[:-1],
-            params=control_params,
-            kappa=kappa,
-        )
+        phi_eff = phi_base * kappa
 
-        q = inventory_from_control(
-            nu_hat=nu_hat,
-            Q0=control_params.Q0,
+        params = EquilibriumControlParams(
             T=control_params.T,
             N=control_params.N,
+            Q0=control_params.Q0,
+            a=a,
+            phi=phi_eff,
+            psi=psi,
+            lam=simulation_params.lambda_,
         )
 
-        avg_abs_rate = np.mean(np.abs(nu_hat))
-        max_abs_rate = np.max(np.abs(nu_hat))
-        mid_inventory = q[len(q) // 2]
-        final_inventory = q[-1]
-        total_traded = np.sum(np.abs(nu_hat)) * dt
+        A_hat_list = [A_hat[:-1]]
+        weights = np.array([1.0], dtype=np.float64)
 
-        avg_abs_rates.append(avg_abs_rate)
-        mid_inventories.append(mid_inventory)
+        nu_list, q_list, nu_bar = equilibrium.solve_mean_field_fixed_point(
+            A_hat_list=A_hat_list,
+            weights=weights,
+            param_list=[params],
+        )
+
+        nu_hat = nu_list[0]
+        q = q_list[0]
+
+        mean_nu = np.mean(nu_hat)
+        mean_abs_rate = np.mean(np.abs(nu_hat))
+        max_abs_rate = np.max(np.abs(nu_hat))
+        midpoint_inventory = q[len(q) // 2]
+        terminal_inventory = q[-1]
+        total_traded = np.sum(np.abs(nu_hat)) * (params.T / params.N)
+
+        mean_abs_rates.append(mean_abs_rate)
+        midpoint_inventories.append(midpoint_inventory)
+        terminal_inventories.append(terminal_inventory)
 
         print(f"kappa = {kappa}")
-        print(f"  avg |nu_t|       = {avg_abs_rate:.6f}")
+        print(f"  phi_eff          = {phi_eff:.6f}")
+        print(f"  mean nu_t        = {mean_nu:.6f}")
+        print(f"  mean |nu_t|      = {mean_abs_rate:.6f}")
         print(f"  max |nu_t|       = {max_abs_rate:.6f}")
-        print(f"  midpoint q_t     = {mid_inventory:.6f}")
-        print(f"  final q_T        = {final_inventory:.6f}")
+        print(f"  midpoint inv.    = {midpoint_inventory:.6f}")
+        print(f"  terminal inv.    = {terminal_inventory:.6f}")
         print(f"  total traded     = {total_traded:.6f}")
         print()
 
     print("Interpretation:")
-    print("  Smaller kappa should typically imply more aggressive trading")
-    print("  and therefore lower remaining inventory mid-horizon.")
+    print("  Here kappa scales the running inventory penalty via phi_eff = phi_base * kappa.")
+    print("  In the current regime, if the outputs barely move with kappa,")
+    print("  that suggests the equilibrium is relatively insensitive to inventory aversion.")
     print()
 
     print("Monotonicity check (informal):")
-    print(f"  avg |nu_t| values: {avg_abs_rates}")
-    print(f"  midpoint q_t values: {mid_inventories}")
+    print(f"  mean |nu_t| values: {mean_abs_rates}")
+    print(f"  midpoint inv. values: {midpoint_inventories}")
+    print(f"  terminal inv. values: {terminal_inventories}")
     print("Done.")
 
 
